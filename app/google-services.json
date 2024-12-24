@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "922673613725",
+    "project_id": "welfare-9abb3",
+    "storage_bucket": "welfare-9abb3.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:922673613725:android:0d085317d56b47fa39fd74",
+        "android_client_info": {
+          "package_name": "com.example.welfare"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "922673613725-nrtob586vk2g46sf2bolpj29r8qkd7vs.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.welfare",
+            "certificate_hash": "942f1c551c82877067cfee0440ca8e7643f01a47"
+          }
+        },
+        {
+          "client_id": "922673613725-5askugpul30ij78rehsu3kes7qsk41g8.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDYbA-uLybak6S_0SOMSUdgfY7KNjLrw7k"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "922673613725-5askugpul30ij78rehsu3kes7qsk41g8.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

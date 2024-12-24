@@ -1,0 +1,13 @@
+{
+  "type": "service_account",
+  "project_id": "welfare-9abb3",
+  "private_key_id": "48d20e1a0c85e9887dfda51b516d9fa0588dea56",
+  "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQDbLgZU0Gp+rqZv\nAXw/0F/+f74NkNmIPFemLV1+CrUc3SIt93o/XhVh++0fsdfNtlfjYWeE28glO1LP\nwBza3ttUeaUl8nrww9QNcINZwYutW+YCoQorhGctE3bBHfzYquEO2+v7yMSt6cq5\ndzV9aQ2aSTTW6bBzEGCsUvIyzDSwI2TougmPIxYty3zibH0JqN7+SbE7Hi0z6v9a\n04pdt2RMZOsRGldBNhbojx3Z07Gi7jLn+/CtKpe1OptjZsdrv+m8Lbuy9PO1nEyV\nVzuqFMzMAaS/q5bs4ZYIOcgn6+DM6ztzOi6/tIMtslzKgigd1bvyGzYXHiZq8+aM\nctfvF9vPAgMBAAECggEAC5DWwB5tEn2yjza5bFJZdUkfPAErC75+2GhQ/87VaPLL\neKYPpoPOKsRZoTljh5m1YGyTZ5GoThfMclMuoFTv8ELx5AfgwqFuOpmcMDl2XpHP\nc6rrznbr33LFM8J16ctRdPmPE3f5RGHULnnVDVSJQO+OSj/PNrDkRHzJvVbEsP2B\ny3ftMp+/1tAf5plJrxRIIeGCtmYSPL4wQXx/LkzOrcZEy6F6W6jRUzl4LPq0e0N8\nfKZnjL6lqcW18SyBS3nr3UOUBy+tMRCipWwroZktjAgd0Mr38G2/LF0wgwTz6TGh\nKqQuywyKOYhEVZVhzcH2daQ1oOmyFX45+UZPgg4xgQKBgQD+4fIdPfP4wSasFnj0\noOQgJsd/jZUS/dR2PPDecolQkZOFbQy66noLHy9Vys906m0JQJUzkx5SAuqyuKBn\nlpGUZZTOA9WMtIV4IFbstyZNh7aTh7V70kCOQy2PEETX8qFwin6r8nGLu4MB0d4O\nRDU191j0MCCm2Gu0Bv6YM8SM0wKBgQDcJAKAbq6CdXHlnkOLLIO/D/wEQRrSQxW+\nGboDnHXfVyGTsR/y18S6sbuoyW5jBpfE+Dv1Yaskaunm+RpIvQBGbKJ6K2E8T5b6\nasSAsJZoNVKhDl1ZM+0zLrqPtRyfk/+Xv48orMg+kXjG6TOLJqw5chnqNz295ey9\n5Qf8yTNnlQKBgQCg29ZisCPWfYg7mV8y/Iuc4vyLOr63oqzBBor5yQ1yZL3WulEL\nckod1MuZ+IpffkfcS/8d8p5zIdYffzf0yGkOX+G+91qCF7gYbUiO0rQAwELw7vgR\nskr9vdX18U2RgFZ04WM6f6M7jdcLgfkDxfZTHcztJ6ajxfiLQNLTGfDU8wKBgFbf\n4xjaFQYo4PzTuyYGOCvDXBo1syb9EGyH7I+WRDISSY7mXIxSODHRCBSxAV4U8Pnr\nWIYauBZUFuBut7+yzpP8NRZvXh0V76f9UHTUu1Z+jJBAgfg89MO5Eii6OYSEPF6f\nWxibLx75+6bLyuqEJX06GR4EFNqHDSlXZBKPODkNAoGBAPTxI6CfwiMiA2M6Xs+T\nqUg2pBHLP+OQdrCqt5ZuwmzBytUafalVctsc9fijxT/tsz80wenuquehuYcChR9C\n8Hbw2s9yukeAVGrFuIkyWiZBPNJ+nhi0UTHNUJhESGxERJqxnLl7R5fpUwEqMcZV\nUpYfrZO/WlrIhCyu2JhD/AkV\n-----END PRIVATE KEY-----\n",
+  "client_email": "vision-api-service-account@welfare-9abb3.iam.gserviceaccount.com",
+  "client_id": "108638241064797674852",
+  "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+  "token_uri": "https://oauth2.googleapis.com/token",
+  "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+  "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/vision-api-service-account%40welfare-9abb3.iam.gserviceaccount.com",
+  "universe_domain": "googleapis.com"
+}
