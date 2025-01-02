@@ -1,5 +1,6 @@
 package UI
 
+import Flow.Screen
 import android.net.Uri
 import androidx.camera.core.*
 import androidx.camera.lifecycle.ProcessCameraProvider
@@ -28,6 +29,8 @@ fun ReportGarbageScreen(
     navController: NavController,
 ) {
 
+
+
     val context = LocalContext.current
     val viewModel: ReportGarbageViewModel = viewModel(
         factory = ReportGarbageViewModelFactory(context)
@@ -43,7 +46,18 @@ fun ReportGarbageScreen(
 
     // Observe the detection results from the ViewModel
     val detectionResult by viewModel.detectionResult.collectAsState()
-
+    var isGarbagedetected by remember {
+        mutableStateOf(false)
+    }
+    detectionResult?.let { result ->
+        Text(result.message)
+        isGarbagedetected = result.isGarbageDetected // Update button visibility
+    }
+    LaunchedEffect(detectionResult) {
+        detectionResult?.let { result ->
+            isGarbagedetected = result.isGarbageDetected
+        }
+    }
     // Initialize the camera
     LaunchedEffect(cameraProviderFuture) {
         startCamera(context, lifecycleOwner, previewView) { capture ->
@@ -51,12 +65,14 @@ fun ReportGarbageScreen(
         }
     }
 
+
     // UI layout
     Column(
         modifier = Modifier.fillMaxSize(),
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
-    ) {
+    )
+    {
         // Camera Preview
         AndroidView(
             factory = { previewView },
@@ -94,8 +110,15 @@ fun ReportGarbageScreen(
 
         // Display Captured Image
         capturedImageUri?.let {
-            Image(painter = rememberImagePainter(it), contentDescription = null)
+            Image(painter = rememberImagePainter(it), contentDescription = null ,modifier = Modifier.size(200.dp))
+
         }
+        if (isGarbagedetected && capturedImageUri != null) {
+            Button(onClick = { navController.navigate("${Screen.FormScreen.route}?imageUri=${capturedImageUri}") }) {
+                Text("Next")
+            }
+        }
+
     }
 }
 

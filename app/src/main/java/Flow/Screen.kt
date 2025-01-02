@@ -6,6 +6,7 @@ sealed class Screen(val route: String) {
     object CaptureImageScreen : Screen("main_screen")
     object DefaultScreen : Screen("Default_screen")
     object SelectImageScreen : Screen("SelectImage_screen")
+    object FormScreen : Screen("FormScreen")
 
 
 

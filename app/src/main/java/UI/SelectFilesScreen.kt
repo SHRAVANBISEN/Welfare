@@ -1,5 +1,6 @@
 package UI
 
+import Flow.Screen
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -21,17 +22,28 @@ import androidx.compose.ui.platform.LocalContext
 @Composable
 fun SelectImage(
     navController: NavController,
-) {  val context = LocalContext.current
+) {
+    val context = LocalContext.current
     val viewModel: ReportGarbageViewModel = viewModel(
         factory = ReportGarbageViewModelFactory(context)
     )
     var imageUri by remember { mutableStateOf<Uri?>(null) }
     val detectionResult by viewModel.detectionResult.collectAsState() // Observe the detection result
+    var isGarbagedetected by remember { mutableStateOf(false) } // Track garbage detection
 
     // Launcher to select an image from the mobile files
-    val launcher = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) {
-            uri -> imageUri = uri // Save the selected image URI
-        uri?.let { viewModel.processImage(it) } // Pass the selected image to the ViewModel for processing
+    val launcher = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri ->
+        imageUri = uri // Save the selected image URI
+        uri?.let {
+            viewModel.processImage(it) // Pass the selected image to the ViewModel for processing
+        }
+    }
+
+    // Update detection state when detection result changes
+    LaunchedEffect(detectionResult) {
+        detectionResult?.let { result ->
+            isGarbagedetected = result.isGarbageDetected
+        }
     }
 
     // UI Layout
@@ -61,6 +73,17 @@ fun SelectImage(
                 contentDescription = "Selected Image",
                 modifier = Modifier.size(200.dp)
             )
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // Show "Next" Button if garbage is detected
+        if (isGarbagedetected && imageUri != null) {
+            Button(onClick = {
+                navController.navigate("${Screen.FormScreen.route}?imageUri=${imageUri}")
+            }) {
+                Text("Next")
+            }
         }
     }
 }

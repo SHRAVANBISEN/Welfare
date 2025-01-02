@@ -1,17 +1,21 @@
 package Flow
 
 import UI.DefaultScreen
+import UI.GarbageReportFormScreen
 import UI.LoginScreen
 import UI.ReportGarbageScreen
 import UI.SelectImage
 import ViewModels.AuthViewModel
 import ViewModels.ReportGarbageViewModel
+import android.net.Uri
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.NavHost
 import androidx.navigation.NavHostController
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.navArgument
 
 @Composable
 fun NavigationGraph(
@@ -40,6 +44,15 @@ fun NavigationGraph(
                 
             }
         }
+        composable(
+            route = "${Screen.FormScreen.route}?imageUri={imageUri}",
+            arguments = listOf(navArgument("imageUri") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val imageUriString = backStackEntry.arguments?.getString("imageUri")
+            val imageUri = imageUriString?.let { Uri.parse(it) } ?: Uri.EMPTY
+            GarbageReportFormScreen(navController, capturedImageUri = imageUri)
+        }
+
 
         composable(Screen.CaptureImageScreen.route) {
 

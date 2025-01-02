@@ -49,15 +49,18 @@ class GarbageRepository @Inject constructor(
                 )
 
                 val requestBody = """
-                    {
-                      "requests": [
-                        {
-                          "image": { "content": "$imageBase64" },
-                          "features": [{ "type": "LABEL_DETECTION" }]
-                        }
-                      ]
-                    }
-                """.trimIndent()
+            {
+              "requests": [
+                {
+                  "image": { "content": "$imageBase64" },
+                  "features": [
+                    { "type": "LABEL_DETECTION" },
+                    { "type": "OBJECT_LOCALIZATION" }
+                  ]
+                }
+              ]
+            }
+        """.trimIndent()
 
                 val request = Request.Builder()
                     .url("https://vision.googleapis.com/v1/images:annotate")
@@ -67,27 +70,90 @@ class GarbageRepository @Inject constructor(
 
                 val response = client.newCall(request).execute()
                 val responseBody = response.body?.string()
-                val labels = JSONArray(
+
+                val labelAnnotations = JSONArray(
                     JSONObject(responseBody).getJSONArray("responses")
-                        .getJSONObject(0).getJSONArray("labelAnnotations").toString()
+                        .getJSONObject(0).optJSONArray("labelAnnotations")?.toString() ?: "[]"
                 )
 
-                val garbageKeywords = listOf("garbage", "trash", "waste", "pollution", "dump", "landfill")
-                var garbageCount = 0
+                val objectAnnotations = JSONArray(
+                    JSONObject(responseBody).getJSONArray("responses")
+                        .getJSONObject(0).optJSONArray("localizedObjectAnnotations")?.toString() ?: "[]"
+                )
 
-                for (i in 0 until labels.length()) {
-                    val description = labels.getJSONObject(i).getString("description").lowercase()
-                    if (garbageKeywords.any { description.contains(it) }) {
-                        garbageCount++
+                // Indoor and outdoor-related keywords
+                val indoorKeywords = listOf( "indoor", "room", "furniture", "office",
+                    "kitchen", "interior", "bedroom", "floor",
+                    "tiles", "wall", "ceiling", "carpet", "corner" ,"room",
+                    "floor",
+                    "tiles",
+                    "wall",
+                    "corner",
+                    "house",
+                    "living room",
+                    "indoor")
+                val outdoorKeywords = listOf("outdoor", "street", "park", "sky", "landscape", "building", "forest","grass", "mountain")
+
+                var indoorCount = 0
+                var outdoorCount = 0
+
+                // Check labels for indoor and outdoor keywords
+                for (i in 0 until labelAnnotations.length()) {
+                    val description = labelAnnotations.getJSONObject(i).getString("description").lowercase()
+                    if (indoorKeywords.any { description.contains(it) }) {
+                        indoorCount++
+                    }
+                    if (outdoorKeywords.any { description.contains(it) }) {
+                        outdoorCount++
                     }
                 }
 
-                // Detection Logic: Require multiple garbage-related labels
-                if (garbageCount >= 3) {
-                    DetectionResult(true, "Garbage Detected in the Area!")
-                } else {
-                    DetectionResult(false, "No Significant Garbage Detected.")
+                // Decide if the image is indoor or outdoor
+                val isIndoor = indoorCount > outdoorCount
+                if (isIndoor) {
+                    return@withContext DetectionResult(false, "No indoor images allowed.")
                 }
+                else
+                {
+                    // If outdoor, proceed with garbage detection
+                    val garbageKeywords = listOf("garbage", "trash", "waste", "pollution", "dump", "debris", "litter")
+                    val nonGarbageKeywords = listOf("person", "human", "face", "poster", "text", "phone", "screenshot", "dark", "shadow")
+                    var garbageCount = 0
+                    var nonGarbageCount = 0
+
+                    // Check labels for garbage and non-garbage keywords
+                    for (i in 0 until labelAnnotations.length()) {
+                        val description = labelAnnotations.getJSONObject(i).getString("description").lowercase()
+                        if (garbageKeywords.any { description.contains(it) }) {
+                            garbageCount++
+                        }
+                        if (nonGarbageKeywords.any { description.contains(it) }) {
+                            nonGarbageCount++
+                        }
+                    }
+
+                    // Check objects for garbage-related terms
+                    for (i in 0 until objectAnnotations.length()) {
+                        val name = objectAnnotations.getJSONObject(i).getString("name").lowercase()
+                        if (garbageKeywords.any { name.contains(it) }) {
+                            garbageCount++
+                        }
+                        if (nonGarbageKeywords.any { name.contains(it) }) {
+                            nonGarbageCount++
+                        }
+                    }
+
+                    // Garbage detection thresholds
+                    val isGarbageDetected = garbageCount > 0 && garbageCount > nonGarbageCount
+
+                    if (isGarbageDetected) {
+                        DetectionResult(true, "Garbage Detected in the Area!")
+                    } else {
+                        DetectionResult(false, "No Significant Garbage Detected.")
+                    }
+                }
+
+
 
             } catch (e: Exception) {
                 e.printStackTrace()
@@ -95,6 +161,8 @@ class GarbageRepository @Inject constructor(
             }
         }
     }
+
+
 
     fun uploadImageToCloud(uri: Uri) {
         val storageRef = FirebaseStorage.getInstance().reference.child("garbage_images/${System.currentTimeMillis()}.jpg")
