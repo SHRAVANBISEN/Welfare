@@ -40,7 +40,7 @@ fun NavigationGraph(
             LoginScreen(
                 authViewModel = authViewModel,
                 context = context,
-                onNavigateToSignUp = { /*TODO*/ },
+                onNavigateToSignUp = { navController.navigate(Screen.SignupScreen.route) },
                 onSignInSuccess = {   navController.navigate(Screen.DefaultScreen.route) {
                     popUpTo(Screen.LoginScreen.route) { inclusive = true }
                 } }) {
