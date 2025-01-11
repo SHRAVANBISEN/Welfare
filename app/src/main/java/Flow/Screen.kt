@@ -7,13 +7,8 @@ sealed class Screen(val route: String) {
     object DefaultScreen : Screen("Default_screen")
     object SelectImageScreen : Screen("SelectImage_screen")
     object FormScreen : Screen("FormScreen")
-
-
-
-
-
-
-
-
+    object verification : Screen("verification")
+    object ngodefault : Screen("ngodefault")
+    object donation : Screen("donation")
 
 }

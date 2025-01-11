@@ -76,22 +76,33 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
         _authResult.value = null
     }
 
-    // Handles user signup
     fun signUp(
         email: String,
         password: String,
-        firstName: String,
-        role: String,
-        phoneNumber: String,
-        extraInfo: String
+        fullName: String,
+        address: String,
+        pinCode: String,
+        city: String,
+        district: String,
+        role: String
     ) {
         viewModelScope.launch {
             setLoading(true)
-            val result = userRepository.signUp(email, password, firstName, role, phoneNumber, extraInfo)
+            val result = userRepository.signUp(
+                email = email,
+                password = password,
+                fullName = fullName,
+                address = address,
+                pinCode = pinCode,
+                city = city,
+                district = district,
+                role = role
+            )
             _authResult.value = result
             setLoading(false)
         }
     }
+
 
     // Checks if the user is already logged in
     fun checkUserLoggedIn() {
@@ -110,7 +121,10 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
         _isUserLoggedIn.value = false
         setPrincipalUserStatus(false) // Clear principal status on logout
     }
-
+    fun clearAllAuthStates() {
+        _authResult.value = null
+        _isUserLoggedIn.value = false
+    }
     // Determines if the current user is a principal user (e.g., municipal corporation user)
     private fun setPrincipalUserStatus(isPrincipal: Boolean) {
         _isPrincipalUser.value = isPrincipal
@@ -140,6 +154,14 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
         // Credentials for the municipal corporation (or admin user)
         private const val principalUserEmail = "admin@municipal.com"
         private const val principalUserPassword = "admin123"
+    }
+    fun getCurrentUserRole(): String? {
+        val user = FirebaseAuth.getInstance().currentUser
+        return if (user != null) {
+            val userEmail = user.email ?: return null
+            // Fetch role from Firebase (assumes role is saved in user collection)
+            userRepository.getUserRole(userEmail)
+        } else null
     }
 
     fun signInWithGoogle(credential: com.google.firebase.auth.AuthCredential) {

@@ -60,6 +60,10 @@ android {
 }
 
 dependencies {
+    implementation ("com.google.android.gms:play-services-maps:18.1.0")
+    implementation ("com.google.maps.android:maps-compose:2.11.0")
+    implementation ("androidx.compose.material:material:1.1.0")
+
     // CameraX
     implementation("androidx.camera:camera-core:1.4.0")
     implementation("androidx.camera:camera-lifecycle:1.4.0")
@@ -93,6 +97,9 @@ dependencies {
     implementation ("io.coil-kt:coil-compose:2.2.2")
     implementation ("androidx.compose.ui:ui:1.5.0")
     implementation ("androidx.compose.material3:material3:1.0.0")
+
+    implementation ("com.google.accompanist:accompanist-systemuicontroller:0.30.0")//
+
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.compose)
@@ -104,6 +111,7 @@ dependencies {
     implementation(libs.androidx.navigation.runtime.ktx)
     implementation(libs.androidx.navigation.compose)
     implementation(libs.androidx.runtime.livedata)
+    implementation(libs.androidx.appcompat)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
