@@ -2,11 +2,8 @@ package UI
 
 import ViewModels.AuthViewModel
 import android.content.Context
-import android.content.Intent
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.animation.animateColorAsState
-import androidx.compose.animation.core.*
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -19,7 +16,6 @@ import androidx.compose.runtime.*
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
@@ -36,9 +32,7 @@ import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount
 import com.google.android.gms.auth.api.signin.GoogleSignInClient
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
-import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.GoogleAuthProvider
-import kotlinx.coroutines.launch
 import Extras.Result
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -47,13 +41,15 @@ fun LoginScreen(
     authViewModel: AuthViewModel,
     context: Context,
     onNavigateToSignUp: () -> Unit,
-    onSignInSuccess: () -> Unit,
-    onPrincipalSignIn: () -> Unit
+    onRoleXNavigate: () -> Unit,
+    onRoleYNavigate: () -> Unit,
+    onRoleZNavigate: () -> Unit
 ) {
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     val isLoading by authViewModel.isLoading.observeAsState(initial = false)
     val result by authViewModel.authResult.observeAsState()
+    val userRole by authViewModel.userRole.observeAsState()
 
     // Google Sign-In Setup
     val googleSignInClient = remember { getGoogleSignInClient(context) }
@@ -64,19 +60,16 @@ fun LoginScreen(
         account?.let { handleGoogleSignIn(it, authViewModel) }
     }
 
-    // Handle navigation on successful login
-    LaunchedEffect(result) {
-        result?.let {
-            if (it is Result.Success) {
-                if (authViewModel.isPrincipalUser(email, password)) {
-                    onPrincipalSignIn()
-                } else {
-                    onSignInSuccess()
-                }
-                email = ""
-                password = ""
-                authViewModel.clearAuthResult()
+    // Handle navigation after successful login
+    LaunchedEffect(result, userRole) {
+        if (result is Result.Success) {
+            when (userRole) {
+                "Citizen" -> onRoleXNavigate()
+                "Municipal Corporation" -> onRoleYNavigate()
+                "NGO" -> onRoleZNavigate()
+                else -> Unit // Handle unknown roles if necessary
             }
+            authViewModel.clearAuthResult()
         }
     }
 
@@ -197,6 +190,7 @@ fun LoginScreen(
     }
 }
 
+
 // Google Sign-In Helpers
 private fun getGoogleSignInClient(context: Context): GoogleSignInClient {
     val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
@@ -208,5 +202,4 @@ private fun getGoogleSignInClient(context: Context): GoogleSignInClient {
 
 private fun handleGoogleSignIn(account: GoogleSignInAccount, authViewModel: AuthViewModel) {
     val credential = GoogleAuthProvider.getCredential(account.idToken, null)
-    authViewModel.signInWithGoogle(credential)
-}
+    authViewModel.signInWithGoogle(credential)}

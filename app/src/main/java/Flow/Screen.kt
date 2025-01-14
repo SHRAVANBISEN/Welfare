@@ -10,5 +10,7 @@ sealed class Screen(val route: String) {
     object verification : Screen("verification")
     object ngodefault : Screen("ngodefault")
     object donation : Screen("donation")
+    object muncipal : Screen("municipal")
+
 
 }

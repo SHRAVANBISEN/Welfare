@@ -1,4 +1,12 @@
 package UI
+
+import MapApi.MapPickerActivity
+import android.app.Activity
+import android.content.Intent
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.ui.platform.LocalContext
+
 import Extras.Result
 import ViewModels.AuthViewModel
 import androidx.compose.foundation.Image
@@ -29,6 +37,8 @@ import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextField
+import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
@@ -37,6 +47,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
@@ -59,19 +71,35 @@ fun SignupScreen(
     var address by remember { mutableStateOf("") }
     var city by remember { mutableStateOf("") }
     var district by remember { mutableStateOf("") }
+    var homeLatitude by remember { mutableStateOf("") }
+    var homeLongitude by remember { mutableStateOf("") }
 
-    // Dropdown for Roles
     var expandedRole by remember { mutableStateOf(false) }
     var selectedRole by remember { mutableStateOf("") }
     val roleOptions = listOf("Citizen", "Municipal Corporation", "NGO")
 
-    // Observing authentication result
     val authResult by authViewModel.authResult.observeAsState()
+    val context = LocalContext.current
+    val mapPickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        if (result.resultCode == Activity.RESULT_OK) {
+            val data = result.data
+            val latitude = data?.getDoubleExtra("latitude", 0.0) ?: 0.0
+            val longitude = data?.getDoubleExtra("longitude", 0.0) ?: 0.0
+            homeLatitude = latitude.toString()
+            homeLongitude = longitude.toString()
+        }
+    }
 
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFF180b42)),
+            .background(
+                brush = Brush.verticalGradient(
+                    colors = listOf(Color(0xFF388E3C), Color(0xFFA5D6A7))
+                )
+            ),
         contentAlignment = Alignment.TopCenter
     ) {
         LazyColumn(
@@ -79,52 +107,30 @@ fun SignupScreen(
                 .padding(16.dp)
                 .fillMaxSize(),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+            verticalArrangement = Arrangement.spacedBy(20.dp)
         ) {
             item {
-                // Signup Logo
                 Image(
-                    painter = painterResource(id = R.drawable.luser), // Placeholder for signup logo
+                    painter = painterResource(id = R.drawable.luser),
                     contentDescription = "Sign-Up Logo",
                     modifier = Modifier
-                        .size(100.dp)
-                        .padding(top = 16.dp)
+                        .size(140.dp)
+                        .padding(top = 20.dp)
                 )
             }
 
             item {
                 Text(
                     "Sign Up",
-                    fontSize = 24.sp,
-                    fontWeight = FontWeight.Bold,
+                    fontSize = 28.sp,
+                    fontWeight = FontWeight.ExtraBold,
                     color = Color.White,
-                    modifier = Modifier.padding(vertical = 8.dp)
+                    modifier = Modifier.padding(vertical = 10.dp)
                 )
             }
 
-            // Full Name
-            item {
-                OutlinedTextField(
-                    value = fullName,
-                    onValueChange = { fullName = it },
-                    label = { Text("Full Name") },
-                    leadingIcon = { Icon(Icons.Default.Person, contentDescription = "Person Icon") },
-                    modifier = Modifier.fillMaxWidth()
-                )
-            }
-
-            // Email
-            item {
-                OutlinedTextField(
-                    value = email,
-                    onValueChange = { email = it },
-                    label = { Text("Email") },
-                    leadingIcon = { Icon(Icons.Default.Email, contentDescription = "Email Icon") },
-                    modifier = Modifier.fillMaxWidth()
-                )
-            }
-
-            // Password
+            item { createStyledTextField("Full Name", fullName) { fullName = it } }
+            item { createStyledTextField("Email", email) { email = it } }
             item {
                 OutlinedTextField(
                     value = password,
@@ -133,62 +139,20 @@ fun SignupScreen(
                     leadingIcon = { Icon(Icons.Default.Lock, contentDescription = "Password Icon") },
                     visualTransformation = PasswordVisualTransformation(),
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(16.dp),
+                    colors = TextFieldDefaults.textFieldColors(
+                        containerColor = Color.White,
+                        focusedIndicatorColor = Color.Transparent,
+                        unfocusedIndicatorColor = Color.Transparent
+                    )
                 )
             }
+            item { createStyledTextField("Address", address) { address = it } }
+            item { createStyledTextField("PIN Code", pinCode) { pinCode = it } }
+            item { createStyledTextField("City", city) { city = it } }
+            item { createStyledTextField("District", district) { district = it } }
 
-            // Address
-            item {
-                OutlinedTextField(
-                    value = address,
-                    onValueChange = { address = it },
-                    label = { Text("Address") },
-                    modifier = Modifier.fillMaxWidth()
-                )
-            }
-
-            // PIN Code
-            item {
-                OutlinedTextField(
-                    value = pinCode,
-                    onValueChange = {
-                        pinCode = it
-                        if (it.length == 6) {
-                            // Mock: Autofill City/District (replace with real API)
-                            val location = getCityAndDistrictFromPin(it)
-                            city = location.first
-                            district = location.second
-                        }
-                    },
-                    label = { Text("PIN Code") },
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                    modifier = Modifier.fillMaxWidth()
-                )
-            }
-
-            // City (Autofilled)
-            item {
-                OutlinedTextField(
-                    value = city,
-                    onValueChange = {},
-                    label = { Text("City") },
-                    enabled = false,
-                    modifier = Modifier.fillMaxWidth()
-                )
-            }
-
-            // District (Autofilled)
-            item {
-                OutlinedTextField(
-                    value = district,
-                    onValueChange = {},
-                    label = { Text("District") },
-                    enabled = false,
-                    modifier = Modifier.fillMaxWidth()
-                )
-            }
-
-            // Role Dropdown
             item {
                 DropdownField(
                     label = "Select Role",
@@ -201,76 +165,103 @@ fun SignupScreen(
                 )
             }
 
-            // Signup Button
+            item {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(8.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        "Latitude: $homeLatitude, Longitude: $homeLongitude",
+                        color = Color.Black,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+
+                Button(
+                    onClick = {
+                        val intent = Intent(context, MapPickerActivity::class.java)
+                        mapPickerLauncher.launch(intent)
+                    },
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(16.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1B5E20))
+                ) {
+                    Text("Pick Home Location", color = Color.White, fontWeight = FontWeight.Bold)
+                }
+            }
+
             item {
                 Button(
                     onClick = {
                         authViewModel.signUp(
-                            email = email,
-                            password = password,
-                            fullName = fullName,
-                            address = address,
-                            pinCode = pinCode,
-                            city = city,
-                            district = district,
-                            role = selectedRole
+                            email, password, fullName, address, pinCode, city, district,
+                            selectedRole, homeLatitude.toDoubleOrNull(), homeLongitude.toDoubleOrNull()
                         )
-                        // Reset fields after signup
-                        fullName = ""
-                        email = ""
-                        password = ""
-                        address = ""
-                        pinCode = ""
-                        city = ""
-                        district = ""
-                        selectedRole = ""
                     },
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(48.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF003366)),
-                    shape = RoundedCornerShape(24.dp)
+                        .height(50.dp),
+                    shape = RoundedCornerShape(16.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1B5E20))
                 ) {
-                    Text("SIGN UP", color = Color.White, fontSize = 16.sp)
+                    Text("SIGN UP", color = Color.White, fontSize = 18.sp, fontWeight = FontWeight.Bold)
                 }
             }
 
-            // Login Navigation
+            authResult?.let {
+                item {
+                    val feedbackColor = when (it) {
+                        is Result.Success -> Color.Green
+                        is Result.Error -> Color.Red
+                        else -> Color.Gray
+                    }
+                    Text(
+                        text = "nope",
+                        color = feedbackColor,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.padding(top = 8.dp)
+                    )
+                }
+            }
+
             item {
                 Text(
                     "Already have an account? Sign in.",
                     color = Color.White,
-                    fontSize = 14.sp,
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Bold,
                     modifier = Modifier
+                        .clickable { authViewModel.clearAllAuthStates(); onNavigateToLogin() }
                         .padding(8.dp)
-                        .clickable {
-                            authViewModel.clearAllAuthStates()
-                            onNavigateToLogin()
-                        }
                 )
-            }
-
-            // Display Auth Result
-            item {
-                authResult?.let { result ->
-                    Spacer(modifier = Modifier.height(8.dp))
-                    when (result) {
-                        is Result.Success -> Text("Registration successful", color = Color.Green)
-                        is Result.Error -> Text("Registration failed: ${result.message}", color = Color.Red)
-                        Result.Loading -> Text("Loading...", color = Color.Gray)
-                    }
-                }
             }
         }
     }
 }
 
-// Mock function for autofilling city and district
-fun getCityAndDistrictFromPin(pinCode: String): Pair<String, String> {
-    return Pair("Mock City", "Mock District") // Replace with API or database lookup
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun createStyledTextField(label: String, value: String, onValueChange: (String) -> Unit) {
+    OutlinedTextField(
+        value = value,
+        onValueChange = onValueChange,
+        label = { Text(label) },
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(16.dp),
+        colors = TextFieldDefaults.textFieldColors(
+            containerColor = Color.White,
+
+            focusedIndicatorColor = Color.Transparent,
+            unfocusedIndicatorColor = Color.Transparent
+        )
+    )
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
+
+
+            @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DropdownField(
     label: String,
@@ -284,7 +275,7 @@ fun DropdownField(
     ExposedDropdownMenuBox(
         expanded = expanded,
         onExpandedChange = { onExpandedChange() },
-        modifier = modifier.fillMaxWidth()
+        modifier = modifier
     ) {
         OutlinedTextField(
             value = selectedOption,
@@ -296,7 +287,13 @@ fun DropdownField(
             },
             modifier = Modifier
                 .menuAnchor()
-                .fillMaxWidth()
+                .fillMaxWidth(),
+            shape = RoundedCornerShape(16.dp),
+            colors = TextFieldDefaults.textFieldColors(
+                containerColor = Color.White,
+                focusedIndicatorColor = Color.Transparent,
+                unfocusedIndicatorColor = Color.Transparent
+            )
         )
         ExposedDropdownMenu(
             expanded = expanded,

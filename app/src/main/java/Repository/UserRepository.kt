@@ -21,7 +21,9 @@ class UserRepository(
         pinCode: String,
         city: String,
         district: String,
-        role: String = "general_user"
+        role: String,
+        homeLatitude: Double?,
+        homeLongitude: Double?
     ): Result<Boolean> = try {
         // Create a new user in Firebase Authentication
         auth.createUserWithEmailAndPassword(email, password).await()
@@ -36,7 +38,9 @@ class UserRepository(
             city = city,
             district = district,
             role = role,
-            createdAt = System.currentTimeMillis()
+            createdAt = System.currentTimeMillis(),
+            homeLatitude = homeLatitude,
+            homeLongitude = homeLongitude
         )
 
         // Save the user to the main "users" collection
@@ -70,6 +74,21 @@ class UserRepository(
     suspend fun login(email: String, password: String): Result<Boolean> = try {
         auth.signInWithEmailAndPassword(email, password).await()
         Result.Success(true)
+    } catch (e: Exception) {
+        Result.Error(e)
+    }
+
+    suspend fun getUserHomeLocation(): Result<Pair<Double, Double>> = try {
+        val email = auth.currentUser?.email ?: throw Exception("User not authenticated")
+        val documentSnapshot = firestore.collection("users").document(email).get().await()
+        val homeLat = documentSnapshot.getDouble("homeLatitude")
+        val homeLng = documentSnapshot.getDouble("homeLongitude")
+
+        if (homeLat != null && homeLng != null) {
+            Result.Success(Pair(homeLat, homeLng))
+        } else {
+            Result.Error(Exception("Home location not found"))
+        }
     } catch (e: Exception) {
         Result.Error(e)
     }
@@ -141,21 +160,19 @@ class UserRepository(
     } catch (e: Exception) {
         Result.Error(e)
     }
-    fun getUserRole(email: String): String? {
-        // Query Firebase Database for the user's role
-        val userDoc = FirebaseFirestore.getInstance()
-            .collection("users")
-            .document(email)
-
-        var role: String? = null
-        userDoc.get().addOnSuccessListener { document ->
-            if (document != null) {
-                role = document.getString("role")
+    suspend fun getUserRole(email: String): Result<String> {
+        return try {
+            val documentSnapshot = firestore.collection("users").document(email).get().await()
+            val role = documentSnapshot.getString("role")
+            if (role != null) {
+                Result.Success(role)
+            } else {
+                Result.Error(Exception("Role not found for user: $email"))
             }
-        }.addOnFailureListener { exception ->
-            Log.e("UserRepository", "Error getting user role: ", exception)
+        } catch (e: Exception) {
+            Log.e("UserRepository", "Error fetching user role: ", e)
+            Result.Error(e)
         }
-        return role
     }
 
     // Sign in with Google

@@ -36,8 +36,17 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
     private val _isUserLoggedIn = MutableLiveData<Boolean>()
     val isUserLoggedIn: LiveData<Boolean> get() = _isUserLoggedIn
 
-    private val _isPrincipalUser = MutableLiveData<Boolean>()
-    val isPrincipalUser: LiveData<Boolean> get() = _isPrincipalUser
+    private val _userRole = MutableLiveData<String?>()
+    val userRole: LiveData<String?> get() = _userRole
+
+    private val _userHomeLocation = MutableLiveData<Result<Pair<Double, Double>>>()
+    val userHomeLocation: LiveData<Result<Pair<Double, Double>>> get() = _userHomeLocation
+
+    fun fetchUserHomeLocation() {
+        viewModelScope.launch {
+            _userHomeLocation.value = userRepository.getUserHomeLocation()
+        }
+    }
 
     init {
         checkUserLoggedIn()
@@ -58,8 +67,7 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
                 val result = userRepository.login(email, password)
                 if (result is Result.Success) {
                     _isUserLoggedIn.value = true
-                    val isPrincipal = isPrincipalUser(email, password)
-                    setPrincipalUserStatus(isPrincipal)
+                    fetchUserRole(email) // Fetch the user's role upon successful login
                 }
                 _authResult.value = result
             } catch (e: Exception) {
@@ -84,7 +92,9 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
         pinCode: String,
         city: String,
         district: String,
-        role: String
+        role: String,
+        homeLatitude: Double?,
+        homeLongitude: Double?
     ) {
         viewModelScope.launch {
             setLoading(true)
@@ -96,22 +106,22 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
                 pinCode = pinCode,
                 city = city,
                 district = district,
-                role = role
+                role = role,
+                homeLatitude = homeLatitude,
+                homeLongitude = homeLongitude
             )
             _authResult.value = result
             setLoading(false)
         }
     }
 
-
     // Checks if the user is already logged in
     fun checkUserLoggedIn() {
         val isLoggedIn = userRepository.isUserLoggedIn()
         _isUserLoggedIn.value = isLoggedIn
-        _isPrincipalUser.value = if (isLoggedIn) {
-            isPrincipalUserOnLaunch()
-        } else {
-            false
+        if (isLoggedIn) {
+            val currentUser = FirebaseAuth.getInstance().currentUser
+            currentUser?.email?.let { fetchUserRole(it) }
         }
     }
 
@@ -119,29 +129,36 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
     fun logout() {
         userRepository.logout()
         _isUserLoggedIn.value = false
-        setPrincipalUserStatus(false) // Clear principal status on logout
+        _userRole.value = null // Clear role on logout
     }
+
     fun clearAllAuthStates() {
         _authResult.value = null
         _isUserLoggedIn.value = false
+        _userRole.value = null
     }
-    // Determines if the current user is a principal user (e.g., municipal corporation user)
-    private fun setPrincipalUserStatus(isPrincipal: Boolean) {
-        _isPrincipalUser.value = isPrincipal
-        with(sharedPreferences.edit()) {
-            putBoolean("isPrincipalUser", isPrincipal)
-            apply()
+    private fun fetchUserRole(email: String) {
+        viewModelScope.launch {
+            try {
+                setLoading(true)
+                when (val roleResult = userRepository.getUserRole(email)) {
+                    is Result.Success -> _userRole.value = roleResult.data
+                    is Result.Error -> {
+                        Log.e(TAG, "Error fetching user role: ${roleResult.message}")
+                        _userRole.value = null
+                    }
+
+                    Result.Loading -> TODO()
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "Exception occurred while fetching user role", e)
+                _userRole.value = null
+            } finally {
+                setLoading(false)
+            }
         }
     }
 
-    fun isPrincipalUser(email: String, password: String): Boolean {
-        return email == principalUserEmail && password == principalUserPassword
-    }
-
-    // Retrieves principal user status on app launch
-    fun isPrincipalUserOnLaunch(): Boolean {
-        return sharedPreferences.getBoolean("isPrincipalUser", false)
-    }
 
     // Updates the loading state
     private fun setLoading(loading: Boolean) {
@@ -150,18 +167,6 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
 
     companion object {
         private const val TAG = "AuthViewModel"
-
-        // Credentials for the municipal corporation (or admin user)
-        private const val principalUserEmail = "admin@municipal.com"
-        private const val principalUserPassword = "admin123"
-    }
-    fun getCurrentUserRole(): String? {
-        val user = FirebaseAuth.getInstance().currentUser
-        return if (user != null) {
-            val userEmail = user.email ?: return null
-            // Fetch role from Firebase (assumes role is saved in user collection)
-            userRepository.getUserRole(userEmail)
-        } else null
     }
 
     fun signInWithGoogle(credential: com.google.firebase.auth.AuthCredential) {
@@ -172,6 +177,8 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
                 if (authResult is Result.Success) {
                     _isUserLoggedIn.value = true
                     _authResult.value = authResult
+                    val email = FirebaseAuth.getInstance().currentUser?.email
+                    if (email != null) fetchUserRole(email)
                 } else {
                     _authResult.value = Result.Error(Exception("Google Sign-In failed"), "Authentication failed.")
                 }
@@ -183,6 +190,4 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
             }
         }
     }
-
 }
-

@@ -1,7 +1,5 @@
 package Data
 
-
-
 data class User(
     val id: String = "",
     val fullName: String = "",
@@ -14,5 +12,7 @@ data class User(
     val phoneNumber: String = "",
     val organizationName: String = "",
     val isVerified: Boolean = false,
-    val createdAt: Long = System.currentTimeMillis()
+    val createdAt: Long = System.currentTimeMillis(),
+    val homeLatitude: Double? = null,
+    val homeLongitude: Double? = null
 )
